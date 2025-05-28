@@ -17,7 +17,7 @@ class Products(models.Model):
     
     product_id = models.BigAutoField(primary_key=True, blank=False)  # product_id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY
     product_name = models.CharField(max_length=100, blank=False)  # product_name VARCHAR(100) NOT NULL
-    stock_status = models.BooleanField(default=1)  # stock_status INT NOT NULL DEFAULT 1
+    stock_status = models.BooleanField(default=True)  # stock_status BOOLEAN NOT NULL DEFAULT True
     categories = models.ForeignKey(Categories, on_delete=models.CASCADE)  # category_id BIGINT NOT NULL
     quantity_in_stock = models.IntegerField(blank=False)  # quantity_in_stock INT NOT NULL
     purchase_price = models.DecimalField(max_digits=10, decimal_places=2, blank=False)  # purchase_price DECIMAL(10,2) NOT NULL
