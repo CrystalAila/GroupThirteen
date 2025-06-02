@@ -5,41 +5,74 @@
 {% block 'content' %}
 {% include "include/Sidebar.html" %}
 {% include "include/Navbar.html" %}
-<div class="pt-20 p-4 sm:ml-64">
 
-    <div>
-        <div class="flex items-center justify-between mb-4">
-            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Categories</h1>
-            <a href="{% url 'add_category' %}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-800">
-                Add New Category
-            </a>
-        </div>
-        <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-        <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                <tr>
-                    <th scope="col" class="px-6 py-3">Category Name</th>
-                    <th scope="col" class="px-6 py-3">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for category in categories %}
-                <tr class="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700 border-gray-200">
-                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                        {{ category.category_name }}
-                    </th>
-                    <td class="px-6 py-4">
-                        <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>       
-                    </td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="2" class="px-6 py-4 text-center">No categories found.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="pt-20 p-4 sm:ml-64">
+  <div>
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Categories</h1>
+      <button onclick="openModal()" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-800">
+        Add New Category
+      </button>
     </div>
 
+    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+      <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+          <tr>
+            <th scope="col" class="px-6 py-3">Category Name</th>
+            <th scope="col" class="px-6 py-3">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for category in categories %}
+          <tr class="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700 border-gray-200">
+            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+              {{ category.category_name }}
+            </th>
+            <td class="px-6 py-4">
+              <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="2" class="px-6 py-4 text-center">No categories found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
+<!-- Modal Script -->
+<script>
+  function openModal() {
+    document.getElementById('addCategoryModal').classList.remove('hidden');
+    document.getElementById('addCategoryModal').classList.add('flex');
+  }
 
+  function closeModal() {
+    document.getElementById('addCategoryModal').classList.remove('flex');
+    document.getElementById('addCategoryModal').classList.add('hidden');
+  }
+</script>
+
+<!-- Modal -->
+<div id="addCategoryModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-white/40 dark:bg-white/20">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg relative">
+    <button onclick="closeModal()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">&times;</button>
+    <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Add Category</h2>
+    <form method="post" action="{% url 'add_category' %}">
+      {% csrf_token %}
+      <div class="mb-4">
+        <label for="category_name" class="block text-sm font-bold text-gray-700 dark:text-gray-200">Category Name</label>
+        <input id="category_name" name="category_name" type="text" class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white" required>
+      </div>
+      <div class="flex justify-between">
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Category</button>
+        <button type="button" onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-700">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock 'content' %}
