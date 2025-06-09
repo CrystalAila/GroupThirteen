@@ -83,7 +83,25 @@
                       {% endif %}
                     </td>
                     <td class="px-6 py-4">
-                        <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
+                        <button type="button"
+    class="bg-blue-600 text-white px-2 py-1 text-sm rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+    onclick="openEditModalWithData(this)"
+    data-product-id="{{ product.product_id }}"
+    data-product-name="{{ product.product_name }}"
+    data-category-id="{{ product.category.category_id }}"
+    data-purchase-price="{{ product.purchase_price }}"
+    data-selling-price="{{ product.selling_price }}"
+    data-quantity-in-stock="{{ product.quantity_in_stock }}"
+    data-stock-status="{{ product.stock_status }}">
+    Edit
+</button>
+<button type="button"
+        style="margin-left: 0.25rem;"
+        class="bg-red-600 text-white px-2 py-1 text-sm rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400"
+        onclick="openDeleteModalWithData(this)"
+        data-product-id="{{ product.product_id }}">
+        Delete
+    </button>
                     </td>
                 </tr>
                 {% empty %}
@@ -166,5 +184,134 @@
     </form>
   </div>
 </div>
+
+<script>
+  function openEditModal() {
+    document.getElementById('editProductModal').classList.remove('hidden');
+    document.getElementById('editProductModal').classList.add('flex');
+  }
+
+  function closeEditModal() {
+    document.getElementById('editProductModal').classList.remove('flex');
+    document.getElementById('editProductModal').classList.add('hidden');
+
+    setTimeout(function() {
+    var msgDiv = document.getElementById('django-messages');
+    if (msgDiv) {
+      msgDiv.style.display = 'none';
+    }
+  }, 3000);
+  }
+</script>
+
+<!-- Edit Product Modal -->
+<div id="editProductModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-white/50">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg relative">
+    <button onclick="closeEditModal()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl">&times;</button>
+    <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Edit Product</h2>
+    
+    <form id="editProductForm" method="post" action="">
+      {% csrf_token %}
+      <div class="mb-4">
+        <label for="edit_product_name" class="block text-sm font-bold text-gray-700 dark:text-gray-200">Product Name</label>
+        <input id="edit_product_name" name="product_name" type="text" value="" class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white" required>
+      </div>
+      <div class="mb-4">
+        <label for="edit_category" class="block text-sm font-bold text-gray-700 dark:text-gray-200">Category</label>
+        <select id="edit_category" name="category" class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white" required>
+          <option value="">Select Category</option>
+          {% for category in categories %}
+          <option value="{{ category.category_id }}">{{ category.category_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-4">
+        <label for="edit_purchase_price" class="block text-sm font-bold text-gray-700 dark:text-gray-200">Purchase Price</label>
+        <input id="edit_purchase_price" name="purchase_price" type="number" step="0.01" value="" class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white" required>
+      </div>
+      <div class="mb-4">
+        <label for="edit_selling_price" class="block text-sm font-bold text-gray-700 dark:text-gray-200">Selling Price</label>
+        <input id="edit_selling_price" name="selling_price" type="number" step="0.01" value="" class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white" required>
+      </div>
+      <div class="mb-4">
+        <label for="edit_quantity_in_stock" class="block text-sm font-bold text-gray-700 dark:text-gray-200">Quantity In Stock</label>
+        <input id="edit_quantity_in_stock" name="quantity_in_stock" type="number" value="" class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white" required>
+      </div>
+      <div class="mb-4">
+        <label for="edit_stock_status" class="block text-sm font-bold text-gray-700 dark:text-gray-200">Stock Status</label>
+        <select id="edit_stock_status" name="stock_status" class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white" required>
+          <option value="True">In Stock</option>
+          <option value="False">Out of Stock</option>
+        </select>
+      </div>
+      <div class="flex justify-between">
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save Changes</button>
+        <button type="button" onclick="closeEditModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-700">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function openEditModalWithData(btn) {
+    // Get data attributes from the clicked button
+    var productId = btn.getAttribute('data-product-id');
+    var productName = btn.getAttribute('data-product-name');
+    var categoryId = btn.getAttribute('data-category-id');
+    var purchasePrice = btn.getAttribute('data-purchase-price');
+    var sellingPrice = btn.getAttribute('data-selling-price');
+    var quantityInStock = btn.getAttribute('data-quantity-in-stock');
+    var stockStatus = btn.getAttribute('data-stock-status');
+
+    // Set form action
+    var form = document.getElementById('editProductForm');
+    form.action = '/products/edit/' + productId + '/';
+
+    // Set input values
+    document.getElementById('edit_product_name').value = productName;
+    document.getElementById('edit_category').value = categoryId;
+    document.getElementById('edit_purchase_price').value = purchasePrice;
+    document.getElementById('edit_selling_price').value = sellingPrice;
+    document.getElementById('edit_quantity_in_stock').value = quantityInStock;
+    document.getElementById('edit_stock_status').value = (stockStatus === 'True' || stockStatus === true) ? 'True' : 'False';
+
+    // Show modal
+    openEditModal();
+  }
+</script>
+
+<!-- Delete Product Modal -->
+<div id="deleteProductModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-white/50">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md relative">
+    <button onclick="closeDeleteModal()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl">&times;</button>
+    <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Delete Product</h2>
+    <p class="mb-6 text-gray-700 dark:text-gray-200">Are you sure you want to delete this product?</p>
+    <form id="deleteProductForm" method="post" action="">
+      {% csrf_token %}
+      <div class="flex justify-between">
+        <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Delete</button>
+        <button type="button" onclick="closeDeleteModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-700">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function openDeleteModalWithData(btn) {
+    var productId = btn.getAttribute('data-product-id');
+    var form = document.getElementById('deleteProductForm');
+    form.action = '/products/delete/' + productId + '/';
+    openDeleteModal();
+  }
+  function openDeleteModal() {
+    document.getElementById('deleteProductModal').classList.remove('hidden');
+    document.getElementById('deleteProductModal').classList.add('flex');
+  }
+  function closeDeleteModal() {
+    document.getElementById('deleteProductModal').classList.remove('flex');
+    document.getElementById('deleteProductModal').classList.add('hidden');
+  }
+</script>
+
 
 {% endblock 'content' %}

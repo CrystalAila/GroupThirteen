@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from .models import Product, Category
 from decimal import Decimal
@@ -105,3 +105,51 @@ def dashboard(request):
         'sold_units': sold_units,
     }
     return render(request, 'dashboard/dashboard.html', context)
+
+def edit_product(request, product_id):
+    product = get_object_or_404(Product, pk=product_id)
+    categories = Category.objects.all()
+    if request.method == 'POST':
+        product.product_name = request.POST.get('product_name')
+        product.category_id = request.POST.get('category')
+        product.purchase_price = request.POST.get('purchase_price')
+        product.selling_price = request.POST.get('selling_price')
+        product.quantity_in_stock = request.POST.get('quantity_in_stock')
+        product.stock_status = request.POST.get('stock_status') == 'True'
+        product.save()
+        messages.success(request, 'Product updated successfully!')
+        return redirect('product_list')
+    return render(request, 'products/EditProducts.html', {
+        'product': product,
+        'categories': categories
+    })
+
+def edit_category(request, category_id):
+    from django.shortcuts import get_object_or_404
+    category = get_object_or_404(Category, pk=category_id)
+    if request.method == 'POST':
+        category.category_name = request.POST.get('category_name')
+        category.save()
+        messages.success(request, 'Category updated successfully!')
+        return redirect('category_list')
+    return render(request, 'categories/EditCategory.html', {
+        'category': category
+    })
+
+def delete_product(request, product_id):
+    from django.shortcuts import get_object_or_404, redirect
+    from django.contrib import messages
+    product = get_object_or_404(Product, pk=product_id)
+    if request.method == 'POST':
+        product.delete()
+        messages.success(request, 'Product deleted successfully!')
+    return redirect('product_list')
+
+def delete_category(request, category_id):
+    from django.shortcuts import get_object_or_404, redirect
+    from django.contrib import messages
+    category = get_object_or_404(Category, pk=category_id)
+    if request.method == 'POST':
+        category.delete()
+        messages.success(request, 'Category deleted successfully!')
+    return redirect('category_list')
