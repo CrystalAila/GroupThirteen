@@ -82,24 +82,25 @@
                         <span class="text-gray-400 italic">No image</span>
                       {% endif %}
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 flex gap-2">
                         <button type="button"
-    class="bg-blue-600 text-white px-2 py-1 text-sm rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-    onclick="openEditModalWithData(this)"
-    data-product-id="{{ product.product_id }}"
-    data-product-name="{{ product.product_name }}"
-    data-category-id="{{ product.category.category_id }}"
-    data-purchase-price="{{ product.purchase_price }}"
-    data-selling-price="{{ product.selling_price }}"
-    data-quantity-in-stock="{{ product.quantity_in_stock }}"
-    data-stock-status="{{ product.stock_status }}">
-    Edit
-</button>
-<button type="button"
-        style="margin-left: 0.25rem;"
-        class="bg-red-600 text-white px-2 py-1 text-sm rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400"
+        class="inline-flex items-center gap-1 bg-blue-500 text-white px-3 py-1.5 text-xs font-semibold rounded-md shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-150"
+        onclick="openEditModalWithData(this)"
+        data-product-id="{{ product.product_id }}"
+        data-product-name="{{ product.product_name }}"
+        data-category-id="{{ product.category.category_id }}"
+        data-purchase-price="{{ product.purchase_price }}"
+        data-selling-price="{{ product.selling_price }}"
+        data-quantity-in-stock="{{ product.quantity_in_stock }}"
+        data-stock-status="{{ product.stock_status }}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13h3l8-8a2.828 2.828 0 00-4-4l-8 8v3z" /></svg>
+        Edit
+    </button>
+    <button type="button"
+        class="inline-flex items-center gap-1 bg-red-500 text-white px-3 py-1.5 text-xs font-semibold rounded-md shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 transition-all duration-150"
         onclick="openDeleteModalWithData(this)"
         data-product-id="{{ product.product_id }}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
         Delete
     </button>
                     </td>
