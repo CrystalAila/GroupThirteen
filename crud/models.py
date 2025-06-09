@@ -16,6 +16,7 @@ class Product(models.Model):
     class Meta:
         db_table = 'tbl_products'
 
+    product_image = models.ImageField(null=True, default='', blank=True, upload_to='products/')
     product_id = models.BigAutoField(primary_key=True)
     product_name = models.CharField(max_length=100)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)

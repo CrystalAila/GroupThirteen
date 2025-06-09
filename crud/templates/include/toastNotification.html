@@ -1,0 +1,97 @@
+{% load static %}
+
+<div class="fixed top-0 inset-x-0 z-50 flex flex-col items-center space-y-2 p-4 pointer-events-none">
+    {% for message in messages %}
+        <div id="toast-{{ forloop.counter }}" class="flex w-full max-w-xs p-4 text-gray-500 pointer-events-auto
+            {% if message.tags == 'error' or message.tags == 'danger' %}
+                bg-red-100 border border-red-200
+            {% elif message.tags == 'success' %}
+                bg-green-100 border border-green-200
+            {% elif message.tags == 'warning' %}
+                bg-yellow-100 border border-yellow-200
+            {% else %}
+                bg-blue-100 border border-blue-200
+            {% endif %}
+            rounded-lg shadow-lg" role="alert">
+            
+            <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8
+                {% if message.tags == 'error' or message.tags == 'danger' %}
+                    text-red-500 bg-red-200
+                {% elif message.tags == 'success' %}
+                    text-green-500 bg-green-200
+                {% elif message.tags == 'warning' %}
+                    text-yellow-500 bg-yellow-200
+                {% else %}
+                    text-blue-500 bg-blue-200
+                {% endif %}
+                rounded-lg">
+                
+                {% if message.tags == 'error' or message.tags == 'danger' %}
+                    <!-- Error icon -->
+                    <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 11.793a1 1 0 1 1-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 0 1-1.414-1.414L8.586 10 6.293 7.707a1 1 0 0 1 1.414-1.414L10 8.586l2.293-2.293a1 1 0 0 1 1.414 1.414L11.414 10l2.293 2.293Z"/>
+                    </svg>
+                {% elif message.tags == 'success' %}
+                    <!-- Success icon -->
+                    <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>
+                    </svg>
+                {% elif message.tags == 'warning' %}
+                    <!-- Warning icon -->
+                    <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM10 15a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm1-4a1 1 0 0 1-2 0V6a1 1 0 0 1 2 0v5Z"/>
+                    </svg>
+                {% else %}
+                    <!-- Info icon -->
+                    <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+                    </svg>
+                {% endif %}
+                <span class="sr-only">{{ message.tags|capfirst }} icon</span>
+            </div>
+            
+            <div class="ml-3 text-sm font-normal">{{ message }}</div>
+            
+            <button type="button"
+                class="ml-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8"
+                aria-label="Close"
+                onclick="closeToast('toast-{{ forloop.counter }}')">
+                <span class="sr-only">Close</span>
+                <svg class="w-3 h-3" aria-hidden="true" fill="none" viewBox="0 0 14 14">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                </svg>
+            </button>
+        </div>
+    {% endfor %}
+</div>
+
+<script>
+    function closeToast(toastId) {
+        const toast = document.getElementById(toastId);
+        if (toast) {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }
+    }
+
+    // Auto-hide toasts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        const toasts = document.querySelectorAll('[id^="toast-"]');
+        toasts.forEach((toast, index) => {
+            setTimeout(() => {
+                closeToast(toast.id);
+            }, 5000 + (index * 500)); // Stagger the auto-close timing
+        });
+    });
+</script>
+
+<style>
+/* Add smooth transitions */
+[id^="toast-"] {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+</style>

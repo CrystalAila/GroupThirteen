@@ -5,6 +5,7 @@
 {% block 'content' %}
 {% include "include/Sidebar.html" %}
 {% include "include/Navbar.html" %}
+{% include "include/toastNotification.html" %}
 
 <div class="pt-20 p-4 sm:ml-64">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
@@ -38,17 +39,6 @@
             </button>
         </div>
     </div>
-
-    {% if messages %}
-      <div id="django-messages">
-        {% for message in messages %}
-          <div class="mb-4 p-3 rounded text-sm text-white bg-green-500">
-            {{ message }}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-
    
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -60,6 +50,7 @@
                     <th scope="col" class="px-6 py-3">Purchase Price</th>
                     <th scope="col" class="px-6 py-3">Selling Price</th>
                     <th scope="col" class="px-6 py-3">Quantity In Stock</th>
+                    <th scope="col" class="px-6 py-3">Image</th>
                     <th scope="col" class="px-6 py-3">Action</th>
                 </tr>
             </thead>
@@ -85,11 +76,18 @@
                         {{ product.quantity_in_stock }}
                     </td>
                     <td class="px-6 py-4">
+                      {% if product.product_image %}
+                        <img src="{{ product.product_image.url }}" alt="Product Image" class="h-12 w-12 object-cover rounded" />
+                      {% else %}
+                        <span class="text-gray-400 italic">No image</span>
+                      {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
                         <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="7" class="px-6 py-4 text-center">No products found.</td></tr>
+                <tr><td colspan="8" class="px-6 py-4 text-center">No products found.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -156,6 +154,10 @@
           <option value="True">In Stock</option>
           <option value="False">Out of Stock</option>
         </select>
+      </div>
+      <div class="mb-4">
+        <label for="product_image" class="block text-sm font-bold text-gray-700 dark:text-gray-200">Product Image</label>
+        <input id="product_image" name="product_image" type="file" accept="image/*" class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white">
       </div>
       <div class="flex justify-between">
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Product</button>
