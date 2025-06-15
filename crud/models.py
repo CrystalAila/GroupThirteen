@@ -119,8 +119,8 @@ class Transaction(models.Model):
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f'Transaction {self.transaction_id} - {self.cashier_name}'
+    def change(self):
+        return self.amount_paid - self.total_amount
 
 
 class TransactionItem(models.Model):

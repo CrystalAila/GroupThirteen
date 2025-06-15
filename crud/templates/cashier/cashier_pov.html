@@ -245,26 +245,22 @@
                 Complete Purchase
               </button>
             </div>
-             
-            <!-- Purchase History Modal -->
-            <div id="purchase-history-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
-              <div class="bg-white w-full max-w-2xl mx-auto rounded-lg shadow-lg overflow-hidden">
-                <div class="flex items-center justify-between px-4 py-3 border-b">
-                  <h3 class="text-lg font-semibold text-gray-800">Purchase History</h3>
-                  <button onclick="closePurchaseHistory()" class="text-gray-500 hover:text-red-500 text-xl">&times;</button>
-                </div>
-                <div id="purchase-history" class="p-4 max-h-[400px] overflow-y-auto">
-                  <!-- History will be injected here -->
-                </div>
-              </div>
-            </div>
-
 
           </div>
         </div>
       </div>
     </div>
   </div>
+  <div id="purchase-history" class="fixed bottom-4 left-4 z-50 w-80 max-w-xs bg-white rounded-lg shadow-lg overflow-hidden border border-gray-300">
+    <div class="flex items-center justify-between px-4 py-3 border-b bg-gray-100">
+      <h3 class="text-lg font-semibold text-gray-800">Purchase History</h3>
+      <button onclick="closePurchaseHistory()" class="text-gray-500 hover:text-red-500 text-xl">&times;</button>
+    </div>
+    <div class="p-4 max-h-64 overflow-y-auto text-sm">
+      <!-- History will be injected here -->
+    </div>
+  </div>
+
 </div>
 
 <style>
@@ -275,10 +271,10 @@
 
 <script>
   let cart = [];
-  let purchaseHistory = []; 
   let isProcessing = false;
   let currentDiscount = { type: 'percentage', value: 0 };
   let currentProduct = null; 
+  
 
   function getCookie(name) {
       let cookieValue = null;
@@ -817,21 +813,19 @@
     })
     .then(data => {
       if (data.status === 'success') {
-        const change = (amountPaid - parseFloat(data.total_amount)).toFixed(2);
-        generateReceipt(data.transaction_id, cashierName, amountPaid, change);
+        // Remove this line:
+        // generateReceipt(data.transaction_id, cashierName, amountPaid, change);
 
         cart = [];
         localStorage.removeItem('cart');
-        alert('Purchase completed successfully!');
-        location.reload();
+        alert('Purchase completed successfully! Redirecting to receipt...');
+        
+        // Redirect to receipt page view
+        window.location.href = `/receipt/${data.transaction_id}/`;
       } else {
         alert(data.error || 'Unknown response format.');
       }
     })
-    .catch(error => {
-      console.error('Fetch error:', error);
-      alert('A server error occurred. Check the console for details.');
-    });
   }
 
 
@@ -849,59 +843,55 @@
     return '';
   }
 
-  function viewPurchaseHistory() {
-    // Display purchase history in a modal or a new section
-    const historyContainer = document.getElementById('purchase-history');
-    historyContainer.innerHTML = ''; // Clear previous history
+  let purchaseHistory = [
+    {
+      date: '2025-06-15T14:30:00Z',
+      items: [
+        { name: 'Product 1', price: 100.00, quantity: 2 },
+        { name: 'Product 2', price: 50.00, quantity: 1 }
+      ],
+      total: 250.00
+    },
+    // more purchases...
+  ];
 
-    if (purchaseHistory.length === 0) {
-      historyContainer.innerHTML = '<p class="text-gray-500">No purchase history available.</p>';
+
+  function viewPurchaseHistory() {
+    // Get the inner content container for purchase history (the scrollable div)
+    const historyListContainer = document.querySelector('#purchase-history > div.p-4');
+
+    if (!historyListContainer) {
+      console.error('Purchase history container not found!');
       return;
     }
 
-    purchaseHistory.forEach((purchase, index) => {
+    historyListContainer.innerHTML = ''; // Clear previous history
+
+    // Make sure purchaseHistory is defined and is an array
+    if (!Array.isArray(purchaseHistory) || purchaseHistory.length === 0) {
+      historyListContainer.innerHTML = '<p class="text-gray-500">No purchase history available.</p>';
+      return;
+    }
+
+    // Generate the purchase history items HTML
+    purchaseHistory.forEach((purchase) => {
       const purchaseDate = new Date(purchase.date).toLocaleString();
-      const itemsHTML = purchase.items.map(item => `<li>${item.name} (₱${item.price.toFixed(2)} x ${item.quantity})</li>`).join('');
-      historyContainer.innerHTML += `
+      const itemsHTML = purchase.items.map(item => 
+        `<li>${item.name} (₱${item.price.toFixed(2)} x ${item.quantity})</li>`
+      ).join('');
+
+      historyListContainer.innerHTML += `
         <div class="border-b py-2">
           <h4 class="font-semibold">Purchase on ${purchaseDate}</h4>
-          <ul>${itemsHTML}</ul>
+          <ul class="list-disc list-inside mb-1">${itemsHTML}</ul>
           <p class="font-bold">Total: ₱${purchase.total.toFixed(2)}</p>
         </div>
       `;
     });
   }
 
-  function generateReceipt(transactionId, cashier, cash, change) {
-    let lines = [];
-    lines.push('--------- STORE RECEIPT ---------');
-    lines.push(`Transaction #: ${transactionId}`);
-    lines.push(`Cashier: ${cashier}`);
-    lines.push('---------------------------------');
-
-    cart.forEach(item => {
-      lines.push(`${item.name} x${item.quantity} - ₱${(item.price * item.quantity).toFixed(2)}`);
-    });
-
-    const total = parseFloat(document.getElementById('cart-total').textContent);
-    lines.push('---------------------------------');
-    lines.push(`Total:   ₱${total.toFixed(2)}`);
-    lines.push(`Cash:    ₱${cash.toFixed(2)}`);
-    lines.push(`Change:  ₱${change}`);
-    lines.push('---------------------------------');
-    lines.push('Thank you for your purchase!');
-    lines.push(new Date().toLocaleString());
-
-    console.log(lines.join('\n'));  // You can show this in a modal instead
-  }
-
-
-  
 </script>
 
-<div id="purchase-history" class="mt-6">
-  <h2 class="text-xl font-semibold text-gray-800 mb-4">Purchase History</h2>
-  <!-- Purchase history will be populated here -->
-</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 {% endblock 'content' %}

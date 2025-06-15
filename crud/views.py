@@ -11,6 +11,7 @@ from django.db.models import Sum
 from functools import wraps
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.utils.timezone import now
 import logging
 
 def role_required(allowed_roles):
@@ -572,3 +573,31 @@ def complete_purchase(request):
 
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': f'Error completing purchase: {str(e)}'}, status=400)
+
+@login_required
+@cashier_or_manager_required
+def receipt_view(request, transaction_id):
+    # Example item data, replace with your actual query logic
+    items = [
+        {"name": "Apple", "quantity": 3, "price": 25.0},
+        {"name": "Banana", "quantity": 2, "price": 15.5},
+    ]
+
+    # Calculate total price per item
+    for item in items:
+        item['total_price'] = item['price'] * item['quantity']
+
+    total = sum(item['total_price'] for item in items)
+    cash = 100.0
+    change = cash - total
+
+    context = {
+        "transaction_id": transaction_id,
+        "cashier": "Alice",
+        "items": items,
+        "total": total,
+        "cash": cash,
+        "change": change,
+        "now": now(),
+    }
+    return render(request, "cashier/receipt.html", context)

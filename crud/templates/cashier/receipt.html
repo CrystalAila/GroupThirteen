@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-50">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Receipt - {{ transaction_id }}</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link href="{% static 'css/tailwind.css' %}" rel="stylesheet" />
+</head>
+<body class="flex justify-center py-10">
+  <div class="w-full max-w-md bg-white p-6 rounded shadow-md border border-gray-300">
+    <h2 class="text-center text-xl font-bold mb-4 border-b pb-2">STORE RECEIPT</h2>
+
+    <div id="receipt-content" class="text-gray-800">
+      <p class="mb-2"><strong>Transaction #:</strong> {{ transaction_id }}</p>
+      <p class="mb-4"><strong>Cashier:</strong> {{ cashier }}</p>
+      <ul class="mb-4 list-disc list-inside space-y-1">
+        {% for item in items %}
+          <li>{{ item.name }} x{{ item.quantity }} - ₱{{ item.price|floatformat:2|add:"0"|floatformat:2|floatformat:2 }} </li>
+        {% endfor %}
+      </ul>
+
+      <hr class="mb-4" />
+      <p class="font-semibold mb-1">Total: ₱{{ total|floatformat:2 }}</p>
+      <p class="font-semibold mb-1">Cash: ₱{{ cash|floatformat:2 }}</p>
+      <p class="font-semibold mb-4">Change: ₱{{ change|floatformat:2 }}</p>
+      <hr class="mb-4" />
+      <p class="text-center italic">Thank you for your purchase!</p>
+      <p class="text-center text-sm text-gray-500 mt-2">{{ now|"DATE_FORMAT" }}</p>
+    </div>
+
+    <button id="generate-pdf" class="mt-6 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+      Download PDF
+    </button>
+  </div>
+
+  <script>
+    const receiptData = {
+      transactionId: "{{ transaction_id }}",
+      cashier: "{{ cashier }}",
+      cash: parseFloat("{{ cash }}"),
+      change: parseFloat("{{ change }}"),
+      total: parseFloat("{{ total }}"),
+      items: [
+        {% for item in items %}
+          {
+            name: "{{ item.name|escapejs }}",
+            quantity: {{ item.quantity }},
+            price: parseFloat("{{ item.price }}")
+          }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ]
+    };
+
+    document.getElementById('generate-pdf').addEventListener('click', () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      let y = 10;
+      doc.setFontSize(14);
+      doc.text('--------- STORE RECEIPT ---------', 10, y);
+      y += 10;
+      doc.setFontSize(12);
+      doc.text(`Transaction #: ${receiptData.transactionId}`, 10, y);
+      y += 7;
+      doc.text(`Cashier: ${receiptData.cashier}`, 10, y);
+      y += 7;
+      doc.text('---------------------------------', 10, y);
+      y += 10;
+
+      receiptData.items.forEach(item => {
+        const line = `${item.name} x${item.quantity} - ₱${(item.price * item.quantity).toFixed(2)}`;
+        doc.text(line, 10, y);
+        y += 7;
+      });
+
+      y += 3;
+      doc.text('---------------------------------', 10, y);
+      y += 7;
+      doc.text(`Total:   ₱${receiptData.total.toFixed(2)}`, 10, y);
+      y += 7;
+      doc.text(`Cash:    ₱${receiptData.cash.toFixed(2)}`, 10, y);
+      y += 7;
+      doc.text(`Change:  ₱${receiptData.change.toFixed(2)}`, 10, y);
+      y += 7;
+      doc.text('---------------------------------', 10, y);
+      y += 10;
+      doc.text('Thank you for your purchase!', 10, y);
+      y += 7;
+      doc.text(new Date().toLocaleString(), 10, y);
+
+      doc.save(`receipt_${receiptData.transactionId}.pdf`);
+    });
+  </script>
+</body>
+</html>
