@@ -2,10 +2,12 @@ from django.urls import path
 from . import views
 from django.conf.urls.static import static
 from django.conf import settings
-from django.contrib.auth import views as auth_views
-from django.urls import path
+from django.views.generic import RedirectView
 
 urlpatterns = [
+    # Redirect base URL to login page
+    path('', RedirectView.as_view(url='/login/', permanent=False)),
+
     path('login/', views.login, name='login'),
     path('logout/', views.logout_view, name='logout'),
 
@@ -29,8 +31,7 @@ urlpatterns = [
     path('api/refresh-products/', views.refresh_products, name='refresh_products'),
     path('process_purchase/', views.process_purchase, name='process_purchase'),
     path('complete_purchase/', views.complete_purchase, name='complete_purchase'),
-    
 ]
 
-
+# Serve media files during development
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
