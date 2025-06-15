@@ -8,9 +8,24 @@
     <title>{% block 'title' %}{% endblock 'title' %}</title>
 </head>
 <body>
+    <div id="logo-sidebar"></div>
     {% include "include/toastNotification.html" %}
     {% block 'content' %} {% endblock 'content' %}
     <script src="https://unpkg.com/flowbite@2.2.1/dist/flowbite.min.js"></script>
     <script src="{% static 'js/notification.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+       function checkProduct() {
+        if (!currentProduct || !currentProduct.name) {
+            showError('No product selected.', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('add-to-cart-btn');
+        if (btn) btn.disabled = true;
+        }
+
+        checkProduct();
+    </script>
 </body>
 </html>

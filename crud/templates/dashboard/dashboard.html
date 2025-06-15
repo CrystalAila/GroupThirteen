@@ -9,65 +9,250 @@
 
 <div class="pt-20 p-4 sm:ml-64">
   <div>
-    <h1 class="text-3xl font-bold mb-6">Welcome, Admin!</h1>
+    <h1 class="text-3xl font-bold text-blue-700 tracking-tight mb-8">Welcome, Admin!</h1>
 
     <!-- Metrics Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-      <div class="bg-white p-6 rounded-2xl shadow">
-        <p class="text-gray-500">Total Products</p>
-        <p class="text-2xl font-semibold">{{ total_products }}</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div class="bg-gradient-to-r from-blue-100 to-blue-50 p-6 rounded-2xl shadow border border-blue-100 flex flex-col items-start">
+        <span class="inline-flex items-center justify-center w-10 h-10 mb-2 bg-blue-200 rounded-full shadow">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        </span>
+        <p class="text-gray-500 font-semibold">Total Products</p>
+        <p class="text-2xl font-bold text-blue-700" id="total_products">{{ total_products|default:0 }}</p>
       </div>
-      <div class="bg-white p-6 rounded-2xl shadow">
-        <p class="text-gray-500">Total Stock</p>
-        <p class="text-2xl font-semibold">{{ total_stock }}</p>
+      <div class="bg-gradient-to-r from-green-100 to-green-50 p-6 rounded-2xl shadow border border-green-100 flex flex-col items-start">
+        <span class="inline-flex items-center justify-center w-10 h-10 mb-2 bg-green-200 rounded-full shadow">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        </span>
+        <p class="text-gray-500 font-semibold">Total Stock</p>
+        <p class="text-2xl font-bold text-green-700" id="total_stock">{{ total_stock|default:0 }}</p>
       </div>
-      <div class="bg-white p-6 rounded-2xl shadow">
-        <p class="text-gray-500">Out of Stock</p>
-        <p class="text-2xl font-semibold">{{ out_of_stock }}</p>
+      <div class="bg-gradient-to-r from-red-100 to-pink-50 p-6 rounded-2xl shadow border border-red-100 flex flex-col items-start">
+        <span class="inline-flex items-center justify-center w-10 h-10 mb-2 bg-red-200 rounded-full shadow">
+          <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+        </span>
+        <p class="text-gray-500 font-semibold">Out of Stock</p>
+        <p class="text-2xl font-bold text-red-700" id="out_of_stock">{{ out_of_stock|default:0 }}</p>
       </div>
-      <div class="bg-white p-6 rounded-2xl shadow">
-        <p class="text-gray-500">Orders</p>
-        <p class="text-2xl font-semibold">{{ total_orders }}</p>
-      </div>
-      <div class="bg-white p-6 rounded-2xl shadow">
-        <p class="text-gray-500">Customers</p>
-        <p class="text-2xl font-semibold">{{ total_customers }}</p>
-      </div>
-      <div class="bg-white p-6 rounded-2xl shadow">
-        <p class="text-gray-500">Sold Units</p>
-        <p class="text-2xl font-semibold">{{ sold_units }}</p>
+      <div class="bg-gradient-to-r from-purple-100 to-purple-50 p-6 rounded-2xl shadow border border-purple-100 flex flex-col items-start">
+        <span class="inline-flex items-center justify-center w-10 h-10 mb-2 bg-purple-200 rounded-full shadow">
+          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+        </span>
+        <p class="text-gray-500 font-semibold">Sold Items</p>
+        <p class="text-2xl font-bold text-purple-700" id="sold_units">{{ sold_units|default:0 }}</p>
       </div>
     </div>
 
-    <!-- Pie Chart -->
-    <div class="bg-white p-6 rounded-2xl shadow mb-10 w-full max-w-4xl">
-      <h2 class="text-xl font-semibold mb-4">Inventory Values</h2>
-      <canvas id="inventoryChart" width="400" height="200"></canvas>
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+      <!-- Category Sales Pie Chart -->
+      <div class="bg-white p-8 rounded-2xl shadow-lg border border-blue-100">
+        <h2 class="text-xl font-bold text-blue-700 mb-4">Sales by Category</h2>
+        <div class="relative">
+          <canvas id="categorySalesChart" width="400" height="300"></canvas>
+        </div>
+      </div>
+
+      <!-- Inventory Status Doughnut Chart -->
+      <div class="bg-white p-8 rounded-2xl shadow-lg border border-blue-100">
+        <h2 class="text-xl font-bold text-blue-700 mb-4">Inventory Status</h2>
+        <div class="relative">
+          <canvas id="inventoryChart" width="400" height="300"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Out of Stock Products Table -->
+    <div class="bg-white p-8 rounded-2xl shadow-lg border border-red-100">
+      <h2 class="text-xl font-bold text-red-700 mb-4">Out of Stock Products</h2>
+      {% if out_of_stock_products %}
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Sold</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              {% for product in out_of_stock_products %}
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10">
+                      <div class="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
+                        <span class="text-red-600 font-semibold text-sm">{{ product.name|first|upper }}</span>
+                      </div>
+                    </div>
+                    <div class="ml-4">
+                      <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                    {{ product.category|default:"N/A" }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ product.sku|default:"N/A" }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ product.price|floatformat:2 }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.last_sold|date:"M d, Y"|default:"Never" }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <a href="{% url 'product_restock' product.id %}" class="text-blue-600 hover:text-blue-900">Restock</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-8">
+          <svg class="mx-auto h-12 w-12 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-gray-900">All products are in stock!</h3>
+          <p class="mt-1 text-sm text-gray-500">Great job managing your inventory.</p>
+        </div>
+      {% endif %}
     </div>
   </div>
 
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <script>
-    const ctx = document.getElementById('inventoryChart').getContext('2d');
-    const chart = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Sold Units', 'Remaining Stock'],
-        datasets: [{
-          label: 'Inventory Split',
-          data: [{{ sold_units }}, {{ total_stock }}],
-          backgroundColor: ['#60a5fa', '#cbd5e1'],
-          hoverOffset: 4
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom'
+    document.addEventListener("DOMContentLoaded", function () {
+      // Data from Django context
+      const soldUnits = {{ sold_units|default:0 }};
+      const totalStock = {{ total_stock|default:0 }};
+      const outOfStock = {{ out_of_stock|default:0 }};
+      
+      // Category sales data - you'll need to pass this from your Django view
+      const categorySalesData = {{ category_sales_data|safe|default:"[]" }};
+      
+      // Inventory Status Doughnut Chart
+      const inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
+      new Chart(inventoryCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Available Stock', 'Sold Units', 'Out of Stock'],
+          datasets: [{
+            label: 'Inventory Status',
+            data: [totalStock, soldUnits, outOfStock],
+            backgroundColor: ['#10b981', '#8b5cf6', '#ef4444'],
+            borderColor: ['#059669', '#7c3aed', '#dc2626'],
+            borderWidth: 2,
+            hoverOffset: 10
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#1e3a8a',
+                font: {
+                  size: 12,
+                  weight: 'bold'
+                },
+                padding: 20
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.parsed || 0;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = ((value / total) * 100).toFixed(1);
+                  return `${label}: ${value} (${percentage}%)`;
+                }
+              }
+            }
           }
         }
+      });
+
+      // Category Sales Pie Chart
+      if (categorySalesData && categorySalesData.length > 0) {
+        const categoryCtx = document.getElementById('categorySalesChart').getContext('2d');
+        
+        // Generate colors for categories
+        const colors = [
+          '#3b82f6', '#ef4444', '#10b981', '#f59e0b', 
+          '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'
+        ];
+        
+        new Chart(categoryCtx, {
+          type: 'pie',
+          data: {
+            labels: categorySalesData.map(item => item.category),
+            datasets: [{
+              label: 'Sales by Category',
+              data: categorySalesData.map(item => item.sold_units),
+              backgroundColor: colors.slice(0, categorySalesData.length),
+              borderColor: colors.slice(0, categorySalesData.length).map(color => color.replace('0.8', '1')),
+              borderWidth: 2,
+              hoverOffset: 10
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  color: '#1e3a8a',
+                  font: {
+                    size: 12,
+                    weight: 'bold'
+                  },
+                  padding: 20
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = context.parsed || 0;
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = ((value / total) * 100).toFixed(1);
+                    return `${label}: ${value} units (${percentage}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      } else {
+        // Show placeholder message if no category data
+        const categoryCtx = document.getElementById('categorySalesChart');
+        categoryCtx.style.display = 'none';
+        const container = categoryCtx.parentElement;
+        container.innerHTML = `
+          <div class="flex flex-col items-center justify-center h-64 text-gray-500">
+            <svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            <p class="text-sm">No sales data available</p>
+            <p class="text-xs">Start selling to see category breakdown</p>
+          </div>
+        `;
       }
     });
   </script>
+  <script>
+  const pieLabels = {{ pie_labels|safe }};
+  const pieData = {{ pie_data|safe }};
+  // Use these in your Chart.js config
+  </script>
+
 </div>
 {% endblock 'content' %}

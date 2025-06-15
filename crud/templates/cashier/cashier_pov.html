@@ -1,0 +1,729 @@
+{% extends "layout/base.html" %}
+
+{% block 'title' %}POS{% endblock 'title' %}
+
+{% block 'content' %}
+{% include "include/Navbar.html" %}
+
+<!-- Error Toast Container -->
+<div id="error-toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 hidden">
+  <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+    <span class="text-gray-700">Processing purchase...</span>
+  </div>
+</div>
+
+<!-- Calculator Modal -->
+<div id="calculator-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm">
+  <div class="bg-white rounded-lg p-6 w-80 shadow-2xl border border-blue-200">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold">Calculator</h3>
+      <button onclick="closeCalculator()" class="text-gray-500 hover:text-gray-700">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Calculator Display -->
+    <div class="mb-4">
+      <input type="text" id="calc-display"
+             class="w-full px-3 py-3 text-right text-xl font-mono bg-gray-50 border border-gray-300 rounded-md"
+             value="0">
+    </div>
+    
+    <!-- Calculator Buttons -->
+    <div class="grid grid-cols-4 gap-2">
+      <button onclick="clearCalculator()" class="calc-btn bg-red-500 hover:bg-red-600 text-white col-span-2">Clear</button>
+      <button onclick="deleteLastDigit()" class="calc-btn bg-yellow-500 hover:bg-yellow-600 text-white">⌫</button>
+      <button onclick="calculateResult()" class="calc-btn bg-blue-500 hover:bg-blue-600 text-white">=</button>
+      
+      <button onclick="appendToCalculator('7')" class="calc-btn">7</button>
+      <button onclick="appendToCalculator('8')" class="calc-btn">8</button>
+      <button onclick="appendToCalculator('9')" class="calc-btn">9</button>
+      <button onclick="appendToCalculator('/')" class="calc-btn bg-gray-300 hover:bg-gray-400">÷</button>
+      
+      <button onclick="appendToCalculator('4')" class="calc-btn">4</button>
+      <button onclick="appendToCalculator('5')" class="calc-btn">5</button>
+      <button onclick="appendToCalculator('6')" class="calc-btn">6</button>
+      <button onclick="appendToCalculator('*')" class="calc-btn bg-gray-300 hover:bg-gray-400">×</button>
+      
+      <button onclick="appendToCalculator('1')" class="calc-btn">1</button>
+      <button onclick="appendToCalculator('2')" class="calc-btn">2</button>
+      <button onclick="appendToCalculator('3')" class="calc-btn">3</button>
+      <button onclick="appendToCalculator('-')" class="calc-btn bg-gray-300 hover:bg-gray-400">-</button>
+      
+      <button onclick="appendToCalculator('0')" class="calc-btn col-span-2">0</button>
+      <button onclick="appendToCalculator('.')" class="calc-btn">.</button>
+      <button onclick="appendToCalculator('+')" class="calc-btn bg-gray-300 hover:bg-gray-400">+</button>
+    </div>
+
+    <div class="flex gap-2 mt-3">
+      <button onclick="addCustomItemToCart()" class="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 font-bold text-lg">
+        Add Custom Item
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="pt-20 p-4">
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Point of Sale System</h1>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Products Section -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow p-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">Products</h2>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <input
+                type="text"
+                id="product-search"
+                oninput="searchProducts()"
+                placeholder="Search products..."
+                class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-auto"
+              />
+              <select id="category-filter" onchange="filterByCategory()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-auto">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                  <option value="{{ category.category_name }}">{{ category.category_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-96 overflow-y-auto" id="product-list">
+            {% for product in products %}
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow product-card"
+                 data-category="{{ product.category.category_name }}"
+                 data-name="{{ product.product_name|lower }}">
+              
+              <!-- Product Image -->
+              <div class="mb-3">
+                {% if product.product_image %}
+                  <div class="w-full flex justify-center items-center bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden" style="height:110px;">
+                    <img src="{{ product.product_image.url }}" alt="{{ product.product_name }}"
+                        class="object-contain h-24 max-h-24 w-auto transition-transform duration-200 hover:scale-105" />
+                  </div>
+                {% else %}
+                  <div class="w-full h-24 bg-gray-100 rounded-md flex items-center justify-center border border-gray-200 shadow-sm">
+                    <span class="text-gray-400 text-xs">No Image Available</span>
+                  </div>
+                {% endif %}
+              </div>
+              
+              <!-- Product Info -->
+              <div class="text-center">
+                <h3 class="font-semibold text-sm text-gray-800 mb-1 truncate" title="{{ product.product_name }}">
+                  {{ product.product_name }}
+                </h3>
+                <p class="text-xs text-gray-500 mb-2">{{ product.category.category_name|default:"Uncategorized" }}</p>
+                <p class="text-lg font-bold text-blue-600 mb-2">₱{{ product.selling_price|floatformat:2 }}</p>
+                
+                <!-- Stock Display -->
+                <div class="mb-3">
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                    {% if product.quantity_in_stock > 10 %}bg-green-100 text-green-800
+                    {% elif product.quantity_in_stock > 0 %}bg-yellow-100 text-yellow-800
+                    {% else %}bg-red-100 text-red-800{% endif %}">
+                    Stock: <span id="stock-{{ product.pk }}" data-original-stock="{{ product.quantity_in_stock }}">{{ product.quantity_in_stock }}</span>
+                  </span>
+                </div>
+                
+                <!-- Add Button -->
+                {% if product.quantity_in_stock > 0 %}
+                  <button type="button"
+                    class="w-full bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
+                    onclick="addToCart('{{ product.product_name|escapejs }}', {{ product.selling_price }}, '{{ product.category.category_name|escapejs }}', '{{ product.pk }}', {{ product.quantity_in_stock }})">
+                    Add to Cart
+                  </button>
+                {% else %}
+                  <button type="button" class="w-full bg-gray-400 text-white px-3 py-2 rounded-md cursor-not-allowed text-sm font-medium" disabled>
+                    Out of Stock
+                  </button>
+                {% endif %}
+
+              </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center text-gray-500 py-8">
+              <p>No products available.</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Cart Section -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow p-4 sticky top-24">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">Shopping Cart</h2>
+            <button onclick="openCalculator()" class="bg-gray-600 text-white px-3 py-2 rounded-md hover:bg-gray-700 transition-colors text-sm">
+              Calculator
+            </button>
+          </div>
+          
+          <!-- Cart Items -->
+          <div class="space-y-3 mb-4 max-h-64 overflow-y-auto" id="cart-items">
+            <!-- Cart items will be added here -->
+            <div id="empty-cart" class="text-center text-gray-500 py-8">
+              <svg class="mx-auto h-12 w-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l1.5-6m9.5 6v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4"/>
+              </svg>
+              <p class="text-sm">Your cart is empty</p>
+            </div>
+          </div>
+          
+          <!-- Discount Section -->
+          <div class="border-t pt-4 mb-4">
+            <div class="flex flex-col gap-2">
+              <label class="text-sm font-medium text-gray-700">Discount</label>
+              <div class="flex gap-2">
+                <select id="discount-type" class="px-3 py-2 border border-gray-300 rounded-md text-sm">
+                  <option value="percentage">%</option>
+                  <option value="fixed">₱</option>
+                </select>
+                <input type="number" id="discount-value" placeholder="0" min="0" step="0.01"
+                       class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                       oninput="applyDiscount()">
+                <button onclick="clearDiscount()" class="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm">
+                  Clear
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Cart Total -->
+          <div class="border-t pt-4">
+            <div class="space-y-2 mb-4">
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-600">Subtotal:</span>
+                <span class="font-medium">₱<span id="cart-subtotal">0.00</span></span>
+              </div>
+              <div class="flex justify-between items-center text-sm" id="discount-display" style="display: none;">
+                <span class="text-gray-600">Discount:</span>
+                <span class="font-medium text-red-600">-₱<span id="discount-amount">0.00</span></span>
+              </div>
+              <div class="flex justify-between items-center border-t pt-2">
+                <span class="text-lg font-semibold text-gray-800">Total:</span>
+                <span class="text-2xl font-bold text-blue-600">₱<span id="cart-total">0.00</span></span>
+              </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="space-y-2">
+              <button type="button" onclick="clearCart()" 
+                      class="w-full bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors font-medium">
+                Clear Cart
+              </button>
+              <button type="button" onclick="confirmPurchase()" id="completePurchaseBtn"
+                      class="w-full bg-green-600 text-white px-4 py-3 rounded-md hover:bg-green-700 transition-colors font-medium text-lg">
+                Complete Purchase
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .calc-btn {
+    @apply px-4 py-3 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-md font-medium transition-colors;
+  }
+</style>
+
+<script>
+  let cart = [];
+  let purchaseHistory = []; 
+  let isProcessing = false;
+  let currentDiscount = { type: 'percentage', value: 0 };
+  let currentProduct = null; 
+
+  function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+  }
+
+  // Calculator functions
+  function openCalculator() {
+    const modal = document.getElementById('calculator-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    clearCalculator();
+  }
+
+  function closeCalculator() {
+    const modal = document.getElementById('calculator-modal');
+    modal.classList.remove('flex');
+    modal.classList.add('hidden');
+  }
+
+  function clearCalculator() {
+    document.getElementById('calc-display').value = '0';
+  }
+
+  function deleteLastDigit() {
+    const display = document.getElementById('calc-display');
+    let value = display.value;
+    if (value.length > 1) {
+      display.value = value.slice(0, -1);
+    } else {
+      display.value = '0';
+    }
+  }
+
+  function appendToCalculator(value) {
+    const display = document.getElementById('calc-display');
+    if (display.value === '0' && value !== '.') {
+      display.value = value;
+    } else {
+      display.value += value;
+    }
+  }
+
+  function calculateResult() {
+    const display = document.getElementById('calc-display');
+    try {
+      // Replace display operators with JavaScript operators
+      let expression = display.value.replace(/×/g, '*').replace(/÷/g, '/');
+      let result = eval(expression);
+      display.value = result.toString();
+    } catch (error) {
+      display.value = 'Error';
+      setTimeout(() => clearCalculator(), 1500);
+    }
+  }
+
+  // Discount functions
+  function applyDiscount() {
+    const type = document.getElementById('discount-type').value;
+    const value = parseFloat(document.getElementById('discount-value').value) || 0;
+    
+    currentDiscount = { type, value };
+    updateCartTotals();
+  }
+
+  function clearDiscount() {
+    document.getElementById('discount-value').value = '';
+    currentDiscount = { type: 'percentage', value: 0 };
+    updateCartTotals();
+  }
+
+  function calculateDiscount(subtotal) {
+    if (currentDiscount.value <= 0) return 0;
+    
+    if (currentDiscount.type === 'percentage') {
+      const maxPercentage = 100;
+      const discountPercent = Math.min(currentDiscount.value, maxPercentage);
+      return (subtotal * discountPercent) / 100;
+    } else {
+      // Fixed amount discount
+      return Math.min(currentDiscount.value, subtotal);
+    }
+  }
+
+  function updateCartTotals() {
+    try {
+      const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const discountAmount = calculateDiscount(subtotal);
+      const total = Math.max(0, subtotal - discountAmount);
+      
+      document.getElementById('cart-subtotal').textContent = subtotal.toFixed(2);
+      document.getElementById('discount-amount').textContent = discountAmount.toFixed(2);
+      document.getElementById('cart-total').textContent = total.toFixed(2);
+      
+      // Show/hide discount display
+      const discountDisplay = document.getElementById('discount-display');
+      if (discountAmount > 0) {
+        discountDisplay.style.display = 'flex';
+      } else {
+        discountDisplay.style.display = 'none';
+      }
+    } catch (error) {
+      console.error('Update totals error:', error);
+    }
+  }
+
+  // Error handling functions
+  function showError(message, type = 'error') {
+    const container = document.getElementById('error-toast-container');
+    const toast = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-green-500' : type === 'warning' ? 'bg-yellow-500' : 'bg-red-500';
+    
+    toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full opacity-0`;
+    toast.innerHTML = `
+      <div class="flex items-center justify-between">
+        <span>${message}</span>
+        <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </button>
+      </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => {
+      toast.classList.remove('translate-x-full', 'opacity-0');
+    }, 100);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+      if (toast.parentElement) {
+        toast.classList.add('translate-x-full', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }
+    }, 5000);
+  }
+
+  function showLoading(show = true) {
+    const overlay = document.getElementById('loading-overlay');
+    const purchaseBtn = document.getElementById('completePurchaseBtn');
+    
+    if (show) {
+      overlay.classList.remove('hidden');
+      if (purchaseBtn) {
+        purchaseBtn.disabled = true;
+        purchaseBtn.textContent = 'Processing...';
+      }
+      isProcessing = true;
+    } else {
+      overlay.classList.add('hidden');
+      if (purchaseBtn) {
+        purchaseBtn.disabled = false;
+        purchaseBtn.textContent = 'Complete Purchase';
+      }
+      isProcessing = false;
+    }
+  }
+
+  function addToCart(name, price, category, pk, stock) {
+    if (isProcessing) {
+      showError('Please wait, processing previous request...', 'warning');
+      return;
+    }
+
+    const productPrice = parseFloat(price);
+    const productStock = parseInt(stock);
+
+    if (productStock <= 0) {
+      showError('This product is out of stock!', 'error');
+      return;
+    }
+    
+    // Check if product is already in cart
+    const existingItem = cart.find(item => item.pk === pk);
+
+    // Calculate currently in cart quantity for this product
+    const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
+    
+    if (currentQuantityInCart >= productStock) {
+      showError(`Cannot add more ${name}. Stock limit reached!`, 'error');
+      return;
+    }
+    
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      cart.push({
+        name: name,
+        price: productPrice,
+        category: category,
+        pk: pk,
+        quantity: 1
+      });
+    }
+
+    updateStockDisplay();
+    renderCart();
+    showError(`Added ${name} to cart`, 'success');
+  }
+
+  function removeFromCart(index) {
+    try {
+      const removedItem = cart.splice(index, 1)[0];
+      updateStockDisplay();
+      renderCart();
+      showError(`Removed ${removedItem.name} from cart`, 'success');
+    } catch (error) {
+      showError('Failed to remove item', 'error');
+      console.error('Remove from cart error:', error);
+    }
+  }
+
+  function updateItemQuantity(index, newQuantity) {
+    if (newQuantity < 1) {
+      removeFromCart(index);
+      return;
+    }
+
+    try {
+      const item = cart[index];
+      const stockElement = document.getElementById('stock-' + item.pk);
+      const originalStock = parseInt(stockElement.getAttribute('data-original-stock'));
+      
+      // Check if new quantity exceeds available stock
+      const otherCartItems = cart.filter((_, i) => i !== index && _.pk === item.pk);
+      const otherQuantity = otherCartItems.reduce((sum, item) => sum + item.quantity, 0);
+      
+      if (newQuantity + otherQuantity > originalStock) {
+        showError('Not enough stock available!', 'error');
+        return;
+      }
+
+      item.quantity = newQuantity;
+      updateStockDisplay();
+      renderCart();
+    } catch (error) {
+      showError('Failed to update quantity', 'error');
+      console.error('Update quantity error:', error);
+    }
+  }
+
+  function updateStockDisplay() {
+    try {
+      // Reset all stock displays to original values
+      document.querySelectorAll('[id^="stock-"]').forEach(elem => {
+        const originalStock = parseInt(elem.getAttribute('data-original-stock'));
+        elem.textContent = originalStock;
+        const badge = elem.parentElement;
+        
+        // Reset badge classes
+        badge.classList.remove('bg-green-100', 'bg-yellow-100', 'bg-red-100', 'text-green-800', 'text-yellow-800', 'text-red-800');
+
+        if (originalStock > 10) {
+          badge.classList.add('bg-green-100', 'text-green-800');
+        } else if (originalStock > 0) {
+          badge.classList.add('bg-yellow-100', 'text-yellow-800');
+        } else {
+          badge.classList.add('bg-red-100', 'text-red-800');
+        }
+      });
+
+      // Update stock displays based on cart items
+      cart.forEach(item => {
+        const stockElement = document.getElementById('stock-' + item.pk);
+        if (stockElement) {
+          const originalStock = parseInt(stockElement.getAttribute('data-original-stock'));
+          const newStock = originalStock - item.quantity;
+          stockElement.textContent = Math.max(0, newStock);
+          
+          const badge = stockElement.parentElement;
+          badge.classList.remove('bg-green-100', 'bg-yellow-100', 'bg-red-100', 'text-green-800', 'text-yellow-800', 'text-red-800');
+
+          if (newStock > 10) {
+            badge.classList.add('bg-green-100', 'text-green-800');
+          } else if (newStock > 0) {
+            badge.classList.add('bg-yellow-100', 'text-yellow-800');
+          } else {
+            badge.classList.add('bg-red-100', 'text-red-800');
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Update stock display error:', error);
+    }
+  }
+
+  function renderCart() {
+    try {
+      const cartContainer = document.getElementById('cart-items');
+      
+      if (cart.length === 0) {
+        cartContainer.innerHTML = `<div id="empty-cart" class="text-center text-gray-500 py-8">
+          <svg class="mx-auto h-12 w-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" 
+            xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l1.5-6m9.5 6v6a2 2 0 01-2 
+            2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4"></path></svg>
+          <p class="text-sm">Your cart is empty</p>
+        </div>`;
+        updateCartTotals();
+        return;
+      }
+      
+      let cartHTML = '';
+      cart.forEach((item, index) => {
+        const subtotal = item.price * item.quantity;
+        cartHTML += `
+          <div class="bg-gray-50 rounded-lg p-3 border">
+            <div class="flex justify-between items-start mb-2">
+              <div class="flex-1">
+                <h4 class="font-medium text-sm text-gray-800">${item.name}</h4>
+                <p class="text-xs text-gray-500">${item.category}</p>
+                <p class="text-sm font-semibold text-blue-600">₱${item.price.toFixed(2)} each</p>
+              </div>
+              <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700 p-1" aria-label="Remove ${item.name}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div class="flex justify-between items-center">
+              <div class="flex items-center space-x-2" aria-label="Quantity controls for ${item.name}">
+                <button onclick="updateItemQuantity(${index}, ${item.quantity - 1})" 
+                        class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300" aria-label="Decrease quantity">
+                  <span class="text-sm">-</span>
+                </button>
+                <span class="text-sm font-medium" aria-live="polite">${item.quantity}</span>
+                <button onclick="updateItemQuantity(${index}, ${item.quantity + 1})" 
+                        class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300" aria-label="Increase quantity">
+                  <span class="text-sm">+</span>
+                </button>
+              </div>
+              <span class="font-semibold text-gray-800" aria-label="Subtotal price for ${item.name}">₱${subtotal.toFixed(2)}</span>
+            </div>
+          </div>`;
+      });
+
+      cartContainer.innerHTML = cartHTML;
+      updateCartTotals();
+    } catch (error) {
+      showError('Failed to update cart display', 'error');
+      console.error('Render cart error:', error);
+    }
+  }
+
+  function clearCart() {
+    if (cart.length === 0) return;
+    if (isProcessing) {
+      showError('Cannot clear cart while processing', 'warning');
+      return;
+    }
+    if (!confirm('Are you sure you want to clear the cart?')) return;
+
+    try {
+      cart = [];
+      clearDiscount();
+      updateStockDisplay();
+      renderCart();
+      showError('Cart cleared', 'success');
+    } catch (error) {
+      showError('Failed to clear cart', 'error');
+      console.error('Clear cart error:', error);
+    }
+  }
+
+  function confirmPurchase() {
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+    fetch('/complete-purchase/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken()  // Required if CSRF is enabled (default in Django)
+      },
+      body: JSON.stringify({
+        cartItems: cart
+      })
+    })
+    .then(async response => {
+      const contentType = response.headers.get('content-type');
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error response:', errorText);
+
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          alert(data.error || 'An error occurred.');
+        } else {
+          alert('Server returned an unexpected response.');
+        }
+
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      // Parse response safely if it's JSON
+      if (contentType && contentType.includes('application/json')) {
+        return response.json();
+      } else {
+        throw new Error('Expected JSON but got something else');
+      }
+    })
+    .then(data => {
+      if (data.message) {
+        alert(data.message);
+        localStorage.removeItem('cart');
+        location.reload();
+      } else {
+        alert(data.error || 'Unknown response format.');
+      }
+    })
+    .catch(error => {
+      console.error('Fetch error:', error);
+      alert('A server error occurred. Check the console for details.');
+    });
+  }
+
+
+// Helper function to get CSRF token if needed
+  function getCSRFToken() {
+    const name = 'csrftoken';
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const c = cookies[i].trim();
+      if (c.startsWith(name + '=')) {
+        return c.substring(name.length + 1);
+      }
+    }
+    return '';
+  }
+
+
+
+
+  function viewPurchaseHistory() {
+    // Display purchase history in a modal or a new section
+    const historyContainer = document.getElementById('purchase-history');
+    historyContainer.innerHTML = ''; // Clear previous history
+
+    if (purchaseHistory.length === 0) {
+      historyContainer.innerHTML = '<p class="text-gray-500">No purchase history available.</p>';
+      return;
+    }
+
+    purchaseHistory.forEach((purchase, index) => {
+      const purchaseDate = new Date(purchase.date).toLocaleString();
+      const itemsHTML = purchase.items.map(item => `<li>${item.name} (₱${item.price.toFixed(2)} x ${item.quantity})</li>`).join('');
+      historyContainer.innerHTML += `
+        <div class="border-b py-2">
+          <h4 class="font-semibold">Purchase on ${purchaseDate}</h4>
+          <ul>${itemsHTML}</ul>
+          <p class="font-bold">Total: ₱${purchase.total.toFixed(2)}</p>
+        </div>
+      `;
+    });
+  }
+
+  // Call this function to view purchase history when needed
+  // viewPurchaseHistory();
+
+  // Other functions like searchProducts, filterByCategory, etc. would go here...
+
+</script>
+
+<div id="purchase-history" class="mt-6">
+  <h2 class="text-xl font-semibold text-gray-800 mb-4">Purchase History</h2>
+  <!-- Purchase history will be populated here -->
+</div>
+
+{% endblock 'content' %}
