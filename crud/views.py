@@ -36,8 +36,6 @@ def cashier_or_manager_required(view_func):
 
 # Create your views here.
 
-def index(request):
-    return HttpResponse("Hello, world. You're at the polls index.")
 
 def login(request):
     if request.method == 'POST':

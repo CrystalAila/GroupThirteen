@@ -2,6 +2,8 @@ from django.urls import path
 from . import views
 from django.conf.urls.static import static
 from django.conf import settings
+from django.contrib.auth import views as auth_views
+from django.urls import path
 
 urlpatterns = [
     path('login/', views.login, name='login'),
@@ -20,7 +22,6 @@ urlpatterns = [
     path('categories/delete/<int:category_id>/', views.delete_category, name='delete_category'),
 
     path('cashier/', views.cashier_pov, name='cashier_pov'),
-    path('receipt/<int:transaction_id>/', views.receipt_view, name='receipt_view'),
 
     path('update-stock/', views.update_stock, name='update_stock'),
     path('api/product-stock/', views.get_product_stock, name='get_product_stock'),
@@ -28,7 +29,7 @@ urlpatterns = [
     path('api/refresh-products/', views.refresh_products, name='refresh_products'),
     path('process_purchase/', views.process_purchase, name='process_purchase'),
     path('complete_purchase/', views.complete_purchase, name='complete_purchase'),
-   
+    
 ]
 
 
