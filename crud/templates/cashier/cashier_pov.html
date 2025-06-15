@@ -77,7 +77,7 @@
       <!-- Products Section -->
       <div class="lg:col-span-2">
         <div class="bg-white rounded-lg shadow p-4">
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <h2 class="text-xl font-semibold text-gray-800">Products</h2>
             <div class="flex flex-col sm:flex-row gap-3">
               <input
@@ -95,6 +95,10 @@
               </select>
             </div>
           </div>
+          <div id="no-products-message" class="col-span-full text-center text-gray-500 py-8 hidden">
+            <p>No products match your search or filter.</p>
+          </div>
+
           
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-96 overflow-y-auto" id="product-list">
             {% for product in products %}
@@ -214,6 +218,21 @@
                 <span class="text-2xl font-bold text-blue-600">₱<span id="cart-total">0.00</span></span>
               </div>
             </div>
+
+            <!-- Payment Section -->
+            <div class="mt-4 space-y-2">
+              <label for="cash-input" class="text-sm font-medium text-gray-700">Cash Given:</label>
+              <input type="number" id="cash-input" min="0" step="0.01"
+                    placeholder="Enter cash amount"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    oninput="updateChangeDisplay()">
+
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Change:</span>
+                <span class="font-medium text-green-600">₱<span id="change-display">0.00</span></span>
+              </div>
+            </div>
+
             
             <!-- Action Buttons -->
             <div class="space-y-2">
@@ -226,6 +245,21 @@
                 Complete Purchase
               </button>
             </div>
+             
+            <!-- Purchase History Modal -->
+            <div id="purchase-history-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
+              <div class="bg-white w-full max-w-2xl mx-auto rounded-lg shadow-lg overflow-hidden">
+                <div class="flex items-center justify-between px-4 py-3 border-b">
+                  <h3 class="text-lg font-semibold text-gray-800">Purchase History</h3>
+                  <button onclick="closePurchaseHistory()" class="text-gray-500 hover:text-red-500 text-xl">&times;</button>
+                </div>
+                <div id="purchase-history" class="p-4 max-h-[400px] overflow-y-auto">
+                  <!-- History will be injected here -->
+                </div>
+              </div>
+            </div>
+
+
           </div>
         </div>
       </div>
@@ -261,7 +295,59 @@
       return cookieValue;
   }
 
+  document.addEventListener('DOMContentLoaded', () => {
+    const storedCart = localStorage.getItem('cart');
+    if (storedCart) {
+      cart = JSON.parse(storedCart);
+      renderCart();
+      updateStockDisplay();
+    }
+  });
+
+
+  function filterProducts() {
+    const searchValue = document.getElementById('product-search').value.toLowerCase();
+    const selectedCategory = document.getElementById('category-filter').value.toLowerCase();
+
+    const productCards = document.querySelectorAll('.product-card');
+    let anyVisible = false;
+
+    productCards.forEach(card => {
+      const name = card.dataset.name.toLowerCase();
+      const category = card.dataset.category.toLowerCase();
+
+      const matchesSearch = name.includes(searchValue);
+      const matchesCategory = selectedCategory === "" || category === selectedCategory;
+
+      if (matchesSearch && matchesCategory) {
+        card.style.display = "";
+        anyVisible = true;
+      } else {
+        card.style.display = "none";
+      }
+    });
+
+    const emptyState = document.getElementById('no-products-message');
+    if (emptyState) {
+      emptyState.style.display = anyVisible ? "none" : "block";
+    }
+  }
+
+  function searchProducts() {
+    filterProducts();
+  }
+
+  function filterByCategory() {
+    filterProducts();
+  }
+
+
   // Calculator functions
+  // Store items and total amount
+  let itemsList = [];  // Will hold { name: string, price: number }
+  let totalAmount = 0;  // Tracks the total amount
+
+  // Open the calculator modal
   function openCalculator() {
     const modal = document.getElementById('calculator-modal');
     modal.classList.remove('hidden');
@@ -269,16 +355,19 @@
     clearCalculator();
   }
 
+  // Close the calculator modal
   function closeCalculator() {
     const modal = document.getElementById('calculator-modal');
     modal.classList.remove('flex');
     modal.classList.add('hidden');
   }
 
+  // Clear the calculator display
   function clearCalculator() {
     document.getElementById('calc-display').value = '0';
   }
 
+  // Delete the last digit in the calculator
   function deleteLastDigit() {
     const display = document.getElementById('calc-display');
     let value = display.value;
@@ -289,6 +378,7 @@
     }
   }
 
+  // Append value to the calculator display
   function appendToCalculator(value) {
     const display = document.getElementById('calc-display');
     if (display.value === '0' && value !== '.') {
@@ -298,6 +388,7 @@
     }
   }
 
+  // Calculate the result based on the expression in the display
   function calculateResult() {
     const display = document.getElementById('calc-display');
     try {
@@ -310,6 +401,44 @@
       setTimeout(() => clearCalculator(), 1500);
     }
   }
+
+  // Add a custom item with a price from the calculator
+  function addCustomItem() {
+    const itemName = prompt('Enter the name of the item:');  // Ask for item name
+    const itemPrice = parseFloat(document.getElementById('calc-display').value);  // Get current calc value as price
+
+    if (isNaN(itemPrice) || itemPrice <= 0) {
+      alert('Please enter a valid price.');
+      return;
+    }
+
+    // Add the item to the list and update total
+    itemsList.push({ name: itemName, price: itemPrice });
+    totalAmount += itemPrice;
+
+    // Update the items list in the UI
+    updateItemsList();
+
+    // Clear the calculator for the next item
+    clearCalculator();
+  }
+
+  // Update the UI with the current items list and total amount
+  function updateItemsList() {
+    const itemListElement = document.getElementById('item-list');
+    itemListElement.innerHTML = '';  // Clear the current list
+
+    // Add each item to the list
+    itemsList.forEach(item => {
+      const listItem = document.createElement('li');
+      listItem.textContent = `${item.name}: $${item.price.toFixed(2)}`;
+      itemListElement.appendChild(listItem);
+    });
+
+    // Update the total amount
+    document.getElementById('total-amount').textContent = totalAmount.toFixed(2);
+  }
+
 
   // Discount functions
   function applyDiscount() {
@@ -424,37 +553,28 @@
 
     const productPrice = parseFloat(price);
     const productStock = parseInt(stock);
-
     if (productStock <= 0) {
       showError('This product is out of stock!', 'error');
       return;
     }
-    
-    // Check if product is already in cart
-    const existingItem = cart.find(item => item.pk === pk);
 
-    // Calculate currently in cart quantity for this product
+    const existingItem = cart.find(item => item.pk === pk);
     const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
-    
+
     if (currentQuantityInCart >= productStock) {
       showError(`Cannot add more ${name}. Stock limit reached!`, 'error');
       return;
     }
-    
+
     if (existingItem) {
       existingItem.quantity += 1;
     } else {
-      cart.push({
-        name: name,
-        price: productPrice,
-        category: category,
-        pk: pk,
-        quantity: 1
-      });
+      cart.push({ name, price: productPrice, category, pk, quantity: 1 });
     }
 
     updateStockDisplay();
     renderCart();
+    localStorage.setItem('cart', JSON.stringify(cart));
     showError(`Added ${name} to cart`, 'success');
   }
 
@@ -622,17 +742,54 @@
     }
   }
 
-  function confirmPurchase() {
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+  function getCartTotal() {
+    const totalText = document.getElementById('cart-total').textContent;
+    return parseFloat(totalText) || 0;
+  }
 
-    fetch('/complete-purchase/', {
+  function updateChangeDisplay() {
+    const cashInput = document.getElementById('cash-input');
+    const changeDisplay = document.getElementById('change-display');
+
+    const total = getCartTotal();
+    const cash = parseFloat(cashInput.value);
+
+    if (isNaN(cash)) {
+      changeDisplay.textContent = '0.00';
+      return;
+    }
+
+    const change = cash - total;
+    changeDisplay.textContent = change >= 0 ? change.toFixed(2) : '0.00';
+  }
+
+  function confirmPurchase() {
+    const cartData = cart.map(item => ({
+      product_id: item.pk,
+      quantity: item.quantity
+    }));
+
+    const amountPaidInput = document.getElementById('cash-input');
+    const amountPaid = parseFloat(amountPaidInput?.value) || 0;
+    const total = getCartTotal();
+
+    if (isNaN(amountPaid) || amountPaid < total) {
+      alert('Please enter a valid cash amount that covers the total.');
+      return;
+    }
+
+    const cashierName = 'Mary Crystal Aila P. Garganza';
+
+    fetch('/complete_purchase/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRFToken': getCSRFToken()  // Required if CSRF is enabled (default in Django)
+        'X-CSRFToken': getCSRFToken(),
       },
-      body: JSON.stringify({
-        cartItems: cart
+      body: JSON.stringify({ 
+        cartItems: cartData,
+        amount_paid: amountPaid,         // ✅ fixed key
+        cashier_name: cashierName        // ✅ fixed key
       })
     })
     .then(async response => {
@@ -652,7 +809,6 @@
         throw new Error(`HTTP ${response.status}`);
       }
 
-      // Parse response safely if it's JSON
       if (contentType && contentType.includes('application/json')) {
         return response.json();
       } else {
@@ -660,9 +816,13 @@
       }
     })
     .then(data => {
-      if (data.message) {
-        alert(data.message);
+      if (data.status === 'success') {
+        const change = (amountPaid - parseFloat(data.total_amount)).toFixed(2);
+        generateReceipt(data.transaction_id, cashierName, amountPaid, change);
+
+        cart = [];
         localStorage.removeItem('cart');
+        alert('Purchase completed successfully!');
         location.reload();
       } else {
         alert(data.error || 'Unknown response format.');
@@ -673,6 +833,7 @@
       alert('A server error occurred. Check the console for details.');
     });
   }
+
 
 
 // Helper function to get CSRF token if needed
@@ -687,9 +848,6 @@
     }
     return '';
   }
-
-
-
 
   function viewPurchaseHistory() {
     // Display purchase history in a modal or a new section
@@ -714,11 +872,31 @@
     });
   }
 
-  // Call this function to view purchase history when needed
-  // viewPurchaseHistory();
+  function generateReceipt(transactionId, cashier, cash, change) {
+    let lines = [];
+    lines.push('--------- STORE RECEIPT ---------');
+    lines.push(`Transaction #: ${transactionId}`);
+    lines.push(`Cashier: ${cashier}`);
+    lines.push('---------------------------------');
 
-  // Other functions like searchProducts, filterByCategory, etc. would go here...
+    cart.forEach(item => {
+      lines.push(`${item.name} x${item.quantity} - ₱${(item.price * item.quantity).toFixed(2)}`);
+    });
 
+    const total = parseFloat(document.getElementById('cart-total').textContent);
+    lines.push('---------------------------------');
+    lines.push(`Total:   ₱${total.toFixed(2)}`);
+    lines.push(`Cash:    ₱${cash.toFixed(2)}`);
+    lines.push(`Change:  ₱${change}`);
+    lines.push('---------------------------------');
+    lines.push('Thank you for your purchase!');
+    lines.push(new Date().toLocaleString());
+
+    console.log(lines.join('\n'));  // You can show this in a modal instead
+  }
+
+
+  
 </script>
 
 <div id="purchase-history" class="mt-6">

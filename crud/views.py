@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from .models import Product, TransactionItem, Category, Transaction
 from decimal import Decimal
 from django.contrib import messages
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -270,16 +270,8 @@ def delete_category(request, category_id):
 @login_required
 @cashier_or_manager_required
 def cashier_pov(request):
-  
-    category_name = request.GET.get('category')
-
-    # Force fresh data from database - no caching
     products = Product.objects.select_related('category').all().order_by('product_name')
     categories = Category.objects.all()
-
-    # Filter by category name if specified
-    if category_name:
-        products = products.filter(category__category_name=category_name)
 
     # Debug: Print actual stock values to console
     print("=== CASHIER POV DEBUG ===")
@@ -306,8 +298,8 @@ def cashier_pov(request):
     return render(request, 'cashier/cashier_pov.html', {
         'products': products,
         'categories': categories,
-        'selected_category': category_name,
     })
+
 
 @csrf_exempt
 def get_product_stock(request):
@@ -504,72 +496,79 @@ def process_purchase(request):
 @csrf_exempt
 def complete_purchase(request):
     if request.method != 'POST':
-        return JsonResponse({'error': 'Invalid request method.'}, status=405)
+        return JsonResponse({'status': 'error', 'message': 'Invalid HTTP method'}, status=405)
 
     try:
-        # Parse JSON safely
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON format.'}, status=400)
+        data = json.loads(request.body)
+        cart_items = data.get('cartItems', [])
+        cashier_name = data.get('cashier_name', 'Unknown Cashier')
+        amount_paid = Decimal(str(data.get('amount_paid', '0')))  # Get amount_paid or 0 if missing
 
-        items = data.get('cartItems', [])
-        if not items:
-            return JsonResponse({'error': 'Cart is empty.'}, status=400)
+        if not cart_items:
+            return JsonResponse({'status': 'error', 'message': 'Cart is empty'}, status=400)
 
-        total_amount = Decimal('0.00')
-        cart_details = []
+        product_ids = [int(item['product_id']) for item in cart_items]  # Ensure IDs are integers
+        products = Product.objects.filter(product_id__in=product_ids)
 
-        # Validate stock & calculate total
-        with transaction.atomic():  # Ensures atomic transaction rollback if anything fails
-            for item in items:
-                product_id = item.get('product_id')
-                quantity = item.get('quantity')
+        # Create a map of product_id -> product
+        products_map = {p.product_id: p for p in products}
 
-                if not product_id or not quantity:
-                    return JsonResponse({'error': 'Missing product ID or quantity.'}, status=400)
+        total_amount = Decimal('0')
 
-                try:
-                    product = Product.objects.get(pk=product_id)
-                except Product.DoesNotExist:
-                    return JsonResponse({'error': f'Product with ID {product_id} not found.'}, status=404)
+        # Validate all products exist and have enough stock
+        for item in cart_items:
+            pid = int(item['product_id'])  # Ensure product_id is an integer
+            qty = int(item.get('quantity', 0))
 
-                quantity = int(quantity)
-                if product.quantity_in_stock < quantity:
-                    return JsonResponse({
-                        'error': f"Not enough stock for '{product.product_name}'"
-                    }, status=400)
+            # Check if product exists in the products_map (which contains products fetched from DB)
+            if pid not in products_map:
+                raise Exception(f'Product ID {pid} not found.')
 
-                subtotal = product.selling_price * quantity
-                total_amount += subtotal
+            product = products_map[pid]
 
-                cart_details.append({
-                    'product': product,
-                    'quantity': quantity,
-                    'subtotal': subtotal
-                })
+            # Check if there's enough stock for the product
+            if product.quantity_in_stock < qty:
+                raise Exception(f'Not enough stock for product {product.product_name}.')
 
-            # Create transaction safely
-            transaction_entry = Transaction.objects.create(total_amount=total_amount)
+            # Accumulate the total amount for the purchase
+            total_amount += product.selling_price * qty
 
-            # Deduct stock and save items
-            for entry in cart_details:
-                product = entry['product']
-                quantity = entry['quantity']
-                subtotal = entry['subtotal']
+        # Check if amount paid is sufficient
+        if amount_paid < total_amount:
+            raise Exception(f'Amount paid ({amount_paid}) is less than total amount ({total_amount}).')
 
-                product.quantity_in_stock -= quantity
-                product.save()  # ✅ Updates stock in admin panel
+        # Create Transaction
+        transaction_record = Transaction.objects.create(
+            cashier_name=cashier_name,
+            total_amount=total_amount,
+            amount_paid=amount_paid,
+        )
 
-                TransactionItem.objects.create(
-                    transaction=transaction_entry,
-                    product=product,
-                    quantity=quantity,
-                    subtotal=subtotal
-                )
+        # Create TransactionItems and update Products
+        for item in cart_items:
+            pid = int(item['product_id'])  # Ensure product_id is an integer
+            qty = int(item.get('quantity', 0))
+            product = products_map[pid]
 
-        return JsonResponse({'message': 'Purchase completed successfully.', 'transaction_id': transaction_entry.id})
+            # Create TransactionItem
+            TransactionItem.objects.create(
+                transaction=transaction_record,
+                product=product,
+                quantity=qty,
+                price_at_purchase=product.selling_price
+            )
+
+            # Update product stock and units sold
+            product.quantity_in_stock -= qty
+            product.units_sold += qty
+            product.save()
+
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Purchase completed successfully!',
+            'transaction_id': transaction_record.transaction_id,
+            'total_amount': str(total_amount)
+        })
 
     except Exception as e:
-        print("Error in purchase:", e)
-        return JsonResponse({'error': 'Server error occurred.'}, status=500)
+        return JsonResponse({'status': 'error', 'message': f'Error completing purchase: {str(e)}'}, status=400)

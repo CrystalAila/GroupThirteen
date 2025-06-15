@@ -26,7 +26,7 @@ urlpatterns = [
     path('api/check-stock/', views.check_stock_availability, name='check_stock_availability'),
     path('api/refresh-products/', views.refresh_products, name='refresh_products'),
     path('process_purchase/', views.process_purchase, name='process_purchase'),
-    path('complete-purchase/', views.complete_purchase, name='complete_purchase'),
+    path('complete_purchase/', views.complete_purchase, name='complete_purchase'),
     path('', views.index, name='index'),
 ]
 
