@@ -14,6 +14,27 @@ from django.core.paginator import Paginator
 from django.utils.timezone import now
 import logging
 
+# def custom_login_view(request):
+#     if request.method == 'POST':
+#         username = request.POST.get('username')
+#         password = request.POST.get('password')
+#         user = authenticate(request, username=username, password=password)
+        
+#         if user is not None:
+#             login(request, user)
+            
+#             # Redirect based on user group
+#             if user.is_superuser or user.is_staff:
+#                 return redirect('/dashboard/')
+#             elif user.groups.filter(name='Cashier').exists():
+#                 return redirect('/cashier_pov/')
+#             else:
+#                 return redirect('/user/list/')  # default fallback
+#         else:
+#             return render(request, 'login.html', {'error': 'Invalid credentials'})
+    
+#     return render(request, 'loginpage.html')
+
 def role_required(allowed_roles):
     def decorator(view_func):
         @wraps(view_func)
@@ -23,7 +44,7 @@ def role_required(allowed_roles):
             if hasattr(request.user, 'role') and request.user.role.role_type in allowed_roles:
                 return view_func(request, *args, **kwargs)
             messages.error(request, "You don't have permission to access this page.")
-            return redirect('dashboard')  # <--- THIS CAUSES THE LOOP!
+            return redirect('dashboard')
         return _wrapped_view
     return decorator
 
