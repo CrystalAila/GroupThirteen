@@ -2,8 +2,12 @@ from django.urls import path
 from . import views
 from django.conf.urls.static import static
 from django.conf import settings
+from django.views.generic import RedirectView
 
 urlpatterns = [
+    # Redirect base URL to login page
+    path('', RedirectView.as_view(url='/login/', permanent=False)),
+
     path('login/', views.login, name='login'),
     path('logout/', views.logout_view, name='logout'),
 
@@ -20,7 +24,6 @@ urlpatterns = [
     path('categories/delete/<int:category_id>/', views.delete_category, name='delete_category'),
 
     path('cashier/', views.cashier_pov, name='cashier_pov'),
-    path('receipt/<int:transaction_id>/', views.receipt_view, name='receipt_view'),
 
     path('update-stock/', views.update_stock, name='update_stock'),
     path('api/product-stock/', views.get_product_stock, name='get_product_stock'),
@@ -28,8 +31,7 @@ urlpatterns = [
     path('api/refresh-products/', views.refresh_products, name='refresh_products'),
     path('process_purchase/', views.process_purchase, name='process_purchase'),
     path('complete_purchase/', views.complete_purchase, name='complete_purchase'),
-   
 ]
 
-
+# Serve media files during development
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

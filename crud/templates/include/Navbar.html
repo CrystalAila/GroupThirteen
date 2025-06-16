@@ -1,3 +1,5 @@
+{% load static %}
+
 <nav class="fixed top-0 z-50 w-full bg-white border-b border-blue-100 shadow-lg dark:bg-gray-800 dark:border-gray-700">
   <div class="px-4 py-3 lg:px-8 flex items-center justify-between">
     <!-- Logo and Sidebar Toggle -->
@@ -24,27 +26,19 @@
           class="flex items-center text-sm bg-blue-100 hover:bg-blue-200 rounded-full focus:ring-4 focus:ring-blue-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-blue-800 transition"
           aria-expanded="false" data-dropdown-toggle="dropdown-user">
           <span class="sr-only">Open user menu</span>
-          <img class="w-9 h-9 rounded-full border-2 border-blue-300 shadow" src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="user photo">
+          <img class="w-9 h-9 rounded-full border-2 border-blue-300 shadow" src="{% static 'images/logo.png' %}" alt="user photo">
         </button>
         <div class="z-50 hidden absolute right-0 mt-2 w-56 my-4 text-base list-none bg-white divide-y divide-blue-100 rounded-xl shadow-lg dark:bg-gray-700 dark:divide-gray-600" id="dropdown-user">
           <div class="px-4 py-3" role="none">
             <p class="text-sm font-semibold text-blue-700 dark:text-white" role="none">
-              Neil Sims
+              Tindahan ni Nene
             </p>
             <p class="text-xs font-medium text-gray-500 truncate dark:text-gray-300" role="none">
-              neil.sims@flowbite.com
+              TindahanniNene@flowbite.com
             </p>
           </div>
           <ul class="py-1" role="none">
-            <li>
-              <a href="#" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white rounded transition" role="menuitem">Dashboard</a>
-            </li>
-            <li>
-              <a href="#" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white rounded transition" role="menuitem">Settings</a>
-            </li>
-            <li>
-              <a href="#" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white rounded transition" role="menuitem">Earnings</a>
-            </li>
+            
             <li>
               <a href="{% url 'login' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-gray-600 dark:hover:text-white rounded transition" role="menuitem">Sign out</a>
             </li>

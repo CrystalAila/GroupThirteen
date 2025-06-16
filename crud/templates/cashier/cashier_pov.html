@@ -894,4 +894,10 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+<ul class="mb-4 list-disc list-inside space-y-1">
+  {% for item in items %}
+    <li>{{ item.name }} x{{ item.quantity }} - ₱{{ item.price|floatformat:2 }}</li>
+  {% endfor %}
+</ul>
+
 {% endblock 'content' %}
